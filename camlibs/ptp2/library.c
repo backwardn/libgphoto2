@@ -1,7 +1,7 @@
 /* library.c
  *
  * Copyright (C) 2001-2005 Mariusz Woloszyn <emsi@ipartners.pl>
- * Copyright (C) 2003-2019 Marcus Meissner <marcus@jet.franken.de>
+ * Copyright (C) 2003-2020 Marcus Meissner <marcus@jet.franken.de>
  * Copyright (C) 2005 Hubert Figuiere <hfiguiere@teaser.fr>
  * Copyright (C) 2009 Axel Waggershauser <awagger@web.de>
  *
@@ -2310,7 +2310,7 @@ static struct {
 	/* https://github.com/gphoto/libgphoto2/issues/283 */
 	{"Fuji:Fujifilm X100F",			0x04cb, 0x02d1, 0},
 	/* https://github.com/gphoto/libgphoto2/issues/133 */
-	{"Fuji:GFX 50 S",			0x04cb, 0x02d3, PTP_CAP},
+	{"Fuji:GFX 50 S",			0x04cb, 0x02d3, PTP_CAP|PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/170 */
 	{"Fuji:Fujifilm X-T20",			0x04cb, 0x02d4, 0},
 	/* Рустем Валиев <rustvt@gmail.com> */
@@ -3711,7 +3711,7 @@ capturetriggered:
 
 	CR (gp_port_set_timeout (camera->port, capture_timeout));
 
-	C_PTP_REP (nikon_wait_busy (params, 100, 200*1000)); /* lets wait 200 seconds */
+	C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900seconds exposures) */
 
 	newobject = 0xffff0001;
 	done = 0; tries = 100;
@@ -5448,7 +5448,7 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 		} while (tries--);
 
 		/* busyness will be reported during the whole of the exposure time. */
-		C_PTP_REP (nikon_wait_busy (params, 100, 200*1000)); /* lets wait 200 seconds */
+		C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
 		return GP_OK;
 	}
 
@@ -5482,7 +5482,7 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 				return translate_ptp_result (ret);
 		} while (ret == PTP_RC_DeviceBusy);
 
-		C_PTP_REP (nikon_wait_busy (params, 100, 200*1000)); /* lets wait 200 seconds */
+		C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
 		return GP_OK;
 	}
 
