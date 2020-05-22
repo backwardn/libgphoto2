@@ -337,6 +337,8 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 			a.usb_vendor = 0x4a9;
 		if (strstr (di->Manufacturer,"Nikon"))
 			a.usb_vendor = 0x4b0;
+		if (strstr (di->Manufacturer,"FUJIFILM"))
+			a.usb_vendor = 0x4cb;
 	}
 	/* Switch the PTP vendor, so that the vendor specific sets become available. */
 	if (	(di->VendorExtensionID == PTP_VENDOR_MICROSOFT) &&
@@ -3874,8 +3876,11 @@ capturetriggered:
 	return GP_OK;
 }
 
-/* 60 seconds timeout in ms ... (for long cycles) */
-#define EOS_CAPTURE_TIMEOUT (60*1000)
+/* 90 seconds timeout in ms ... (for long cycles)
+ * while the max shutterspeed is 30seconds, there is also postprocessing of 30seconds happening
+ * in e.g. https://github.com/gphoto/libgphoto2/issues/503
+ */
+#define EOS_CAPTURE_TIMEOUT (90*1000)
 
 /* This is currently the capture method used by the EOS 400D
  * ... in development.
@@ -8813,6 +8818,8 @@ camera_init (Camera *camera, GPContext *context)
 	/* get device info */
 	C_PTP_REP (ptp_getdeviceinfo(params, &params->deviceinfo));
 
+	print_debug_deviceinfo(params, &params->deviceinfo);
+
 	CR (fixup_cached_deviceinfo (camera,&params->deviceinfo));
 
 	print_debug_deviceinfo(params, &params->deviceinfo);
@@ -8849,6 +8856,7 @@ camera_init (Camera *camera, GPContext *context)
 				/* Setting remote mode changes device info on EOS M2,
 				   so have to reget it */
 				C_PTP (ptp_getdeviceinfo(&camera->pl->params, &camera->pl->params.deviceinfo));
+				print_debug_deviceinfo(params, &params->deviceinfo);
 				CR (fixup_cached_deviceinfo (camera, &camera->pl->params.deviceinfo));
 				print_debug_deviceinfo(params, &params->deviceinfo);
 			} else {
