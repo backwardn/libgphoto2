@@ -740,6 +740,44 @@ typedef struct _PTPIPHeader PTPIPHeader;
 #define PTP_OC_OLYMPUS_OMD_ChangedProperties		0x9486
 #define PTP_OC_OLYMPUS_OMD_MFDrive			0x9487
 #define PTP_OC_OLYMPUS_OMD_SetProperties		0x9489 /* Sends to the device a PTP list of all 16 bit device properties , count 32bit, then 16bit vals */
+/* 948C: Record Video? */
+/* 9482: Set One Touch WB Gain */
+/* 9483: Set / Start Magnifying Live View Point */
+/* 9488: Change Magnifying Live View Area */
+/* 9493: Start Driving Zoom Lens For Direction / Focal Length  / Stop Driving zoom 
+ * start direction: 		x1=1,x2=0,x3= STEPS?, x4=1 or 2 (near / far ? )
+ * start to focallength:	x1=1,x2=3,x3= VALUE? ,x4=4 (potentially more)
+ * stop:  			x1=2,x2=0,x3=0,x4=0
+ * unclear:			x1=4,x2=0,x3=0,x4=0
+ */
+/* 9495: Set / Clear Auto Focus Point? */
+/* 94a0: Set / Clear Auto Exposure Point? */
+/* 94b7 or 94bf: Set Focus Adjust Pulse */
+/* 94A1: Detect One Touch WB Gain */
+/* 94A2: AdjustLevelGauge? */
+/* 94A4: Get Direct Item Buffer */
+/* 94A5: Get Direct Item Info */
+/* 94B7: Get Recording Folder List? */
+/* 94BA / 94a1: Pixel Mapping? */
+/* 94ba: TransferModeStartStop */
+/* 94bb: Get Un Transfer List */
+/* 94bc: GetLocalObject info? */
+/* 94bd: GetLocalObject? */
+/* 94be: delete local object? */
+/* 94c0 / 94b9 : Set Comment String */
+/* 94bf: Set Connect Pc Info? */
+/* 94c0: Get Connect Pc Info? */
+/* 94c1: Clear Connect Pc Info? */
+/* 94c4: Get Camera Af Target Frames? */
+/* 94c3: Start Station Mode */
+/* 94c3: End Station Mode */
+/* 911c: Get Firmware Update Mode? */
+/* 9121: Firmware Check? */
+/* 9122: Get Firmware Status? */
+/* 9123: Firmware Update Initiate? */
+/* 9124: Get Firmware Language? */
+/* 9125: Get Firmware Status? */
+/* 9126: Trans Firmware? */
 
 /* Olympus E series commands */
 
@@ -1118,10 +1156,6 @@ typedef struct _PTPIPHeader PTPIPHeader;
 #define PTP_EC_Nikon_SBAttrChanged		0xC122	/* e1: sbhandle, e2: attrid */
 #define PTP_EC_Nikon_SBGroupAttrChanged		0xC123	/* e1: sbgroupid, e2: groupattrid */
 
-/* Olympus E series */
-#define PTP_EC_Olympus_PropertyChanged		0xC102
-#define PTP_EC_Olympus_CaptureComplete		0xC103
-
 /* Sony */
 #define PTP_EC_Sony_ObjectAdded			0xC201
 #define PTP_EC_Sony_ObjectRemoved		0xC202
@@ -1138,9 +1172,40 @@ typedef struct _PTPIPHeader PTPIPHeader;
 #define PTP_EC_PANASONIC_ObjectAdded		0xC108
 #define PTP_EC_PANASONIC_ObjectAddedSDRAM	0xC109
 
-#define PTP_EC_OLYMPUS_CaptureComplete		0xC101 /* guessing */
-#define PTP_EC_OLYMPUS_ObjectAdded		0xC102
-#define PTP_EC_OLYMPUS_PropChanged		0xC108
+/* Olympus E series, PTP style in the 2018+ range (e1mark2 etc.) */
+/* From olympus capture tool */
+#define PTP_EC_Olympus_CreateRecView		0xC001
+#define PTP_EC_Olympus_CreateRecView_New	0xC101
+#define PTP_EC_Olympus_ObjectAdded		0xC002
+#define PTP_EC_Olympus_ObjectAdded_New		0xC102
+#define PTP_EC_Olympus_AF_Frame			0xC003
+#define PTP_EC_Olympus_AF_Frame_New		0xC103
+#define PTP_EC_Olympus_DirectStoreImage		0xC004
+#define PTP_EC_Olympus_DirectStoreImage_New	0xC104
+#define PTP_EC_Olympus_ComplateCameraControlOff		0xC005
+#define PTP_EC_Olympus_ComplateCameraControlOff_New	0xC105
+#define PTP_EC_Olympus_AF_Frame_Over_Info	0xC006
+#define PTP_EC_Olympus_AF_Frame_Over_Info_New	0xC106
+#define PTP_EC_Olympus_DevicePropChanged	0xC008
+#define PTP_EC_Olympus_DevicePropChanged_New	0xC108
+#define PTP_EC_Olympus_ImageTransferModeFinish	0xC00C
+#define PTP_EC_Olympus_ImageTransferModeFinish_New	0xC10C
+#define PTP_EC_Olympus_ImageRecordFinish	0xC00D
+#define PTP_EC_Olympus_ImageRecordFinish_New	0xC10D
+#define PTP_EC_Olympus_SlotStatusChange		0xC00E
+#define PTP_EC_Olympus_SlotStatusChange_New	0xC10E
+#define PTP_EC_Olympus_PrioritizeRecord		0xC00F
+#define PTP_EC_Olympus_PrioritizeRecord_New	0xC10F
+#define PTP_EC_Olympus_FailCombiningAfterShooting	0xC010
+#define PTP_EC_Olympus_FailCombiningAfterShooting_New	0xC110
+#define PTP_EC_Olympus_NotifyAFTargetFrame	0xC011
+#define PTP_EC_Olympus_NotifyAFTargetFrame_New	0xC111
+#define PTP_EC_Olympus_RawEditParamChanged	0xC112
+#define PTP_EC_Olympus_OlyNotifyCreateDrawEdit	0xC113
+
+/* Used by the XML based E series driver */
+#define PTP_EC_Olympus_PropertyChanged		0xC102
+#define PTP_EC_Olympus_CaptureComplete		0xC103
 
 /* constants for GetObjectHandles */
 #define PTP_GOH_ALL_STORAGE 0xffffffff
@@ -2626,6 +2691,7 @@ typedef struct _PTPCanonEOSDeviceInfo {
 #define PTP_DPC_OLYMPUS_FlashBracket			0xD15C
 #define PTP_DPC_OLYMPUS_ISOBracket			0xD15D
 #define PTP_DPC_OLYMPUS_MyModeStatus			0xD15E
+#define PTP_DPC_OLYMPUS_DateTimeUTC			0xD176 /* check */
 
 /* Sony A900 */
 #define PTP_DPC_SONY_DPCCompensation			0xD200
