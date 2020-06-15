@@ -2,6 +2,8 @@ libgphoto2 2.5.25.1 development version
 
 ptp2:
 * olympus omd: fixed the 65 second wait after capture.
+* Canon EOS:
+  * better framerate for preview capture
 
 translations:
 

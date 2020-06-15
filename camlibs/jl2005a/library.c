@@ -192,7 +192,15 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	GP_DEBUG ("height is %i\n", h);
 
 	/* sanity check against bad usb devices */
-	if ((w ==0) || (w > 1024) || (h == 0) || (h > 1024)) return GP_ERROR_CORRUPTED_DATA;
+	if ((w ==0) || (w > 1024) || (h == 0) || (h > 1024)) {
+		GP_DEBUG ("width / height not within sensible range");
+		return GP_ERROR_CORRUPTED_DATA;
+	}
+
+	if (b < w*h+5) {
+		GP_DEBUG ("b is %i, while w*h+5 is %i\n", b, w*h+5);
+		return GP_ERROR_CORRUPTED_DATA;
+	}
 
 	/* Image data to be downloaded contains header and footer bytes */
 	data = malloc (b+14);
@@ -212,7 +220,7 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	/* Now get ready to put the data into a PPM image file. */
 	image_start=data+5;
 	if (w == 176) {
-		for (i=1; i < h; i +=4){
+		for (i=1; i < h-1; i +=4){
 			for (j=1; j< w; j ++){
 				temp=image_start[i*w+j];
 				image_start[i*w+j] = image_start[(i+1)*w+j];

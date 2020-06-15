@@ -408,7 +408,8 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 		 * PTP capture. FIXME: could use flags. */
 		if (params->deviceinfo.Model && (
 			(params->deviceinfo.Model[0]=='J') ||	/* J1 - J3 currently */
-			(params->deviceinfo.Model[0]=='V') ||	/* V1 - V3 currently */
+			/* only have V2 and later ... The V1 does not accept PTP_OC_NIKON_GetVendorPropCodes opcode and hangs */ 
+			((params->deviceinfo.Model[0]=='V') && strcmp(params->deviceinfo.Model,"V1")) ||	/* V2 - V3 currently. */
 			((params->deviceinfo.Model[0]=='S') && strlen(params->deviceinfo.Model) < 3)	/* S1 - S2 currently */
 				/* but not S7000 */
 			)
@@ -1530,6 +1531,9 @@ static struct {
 	/* Schreiber, Steve via Gphoto-devel */
 	{"Nikon:DSC D3500",		  0x04b0, 0x0445, PTP_CAP|PTP_CAP_PREVIEW},
 
+	/* timelapse-VIEW */
+	{"Nikon:DSC D780",		  0x04b0, 0x0446, PTP_CAP|PTP_CAP_PREVIEW},
+
 	/* http://sourceforge.net/tracker/?func=detail&aid=3536904&group_id=8874&atid=108874 */
 	{"Nikon:V1",    		  0x04b0, 0x0601, PTP_CAP|PTP_NIKON_1},
 	/* https://sourceforge.net/tracker/?func=detail&atid=358874&aid=3556403&group_id=8874 */
@@ -1566,6 +1570,8 @@ static struct {
 	{"Panasonic:Lumix FZ5",           0x04da, 0x2372, 0},
 #endif
 
+	/* so the GX8 reports the same USB ids as others, but has capture support. See debuglog. */
+	{"Panasonic:DMC-GX8",             0x04da, 0x2374, PTP_CAP|PTP_CAP_PREVIEW},
 	{"Panasonic:DMC-FZ20",            0x04da, 0x2374, 0},
 	{"Panasonic:DMC-FZ45",            0x04da, 0x2374, 0},
 	{"Panasonic:DMC-FZ38",            0x04da, 0x2374, 0},
@@ -3043,7 +3049,6 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 			 * enough (would be 0.2 seconds, too short for the mirror up operation.). */
 			/* The EOS 100D takes 1.2 seconds */
 			PTPDevicePropDesc       dpd;
-			int			back_off_wait = 0;
 			struct timeval		event_start;
 
 			SET_CONTEXT_P(params, context);
@@ -3082,6 +3087,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 			event_start = time_now();
 			do {
 				unsigned char	*xdata;
+
 				/* Poll for camera events, but just call
 				 * it once and do not drain the queue now */
 				C_PTP (ptp_check_eos_events (params));
@@ -3089,7 +3095,9 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 				ret = ptp_canon_eos_get_viewfinder_image (params , &data, &size);
 				if ((ret == 0xa102) || (ret == PTP_RC_DeviceBusy)) { /* means "not there yet" ... so wait */
 					/* wait 3 seconds at most */
-					if (waiting_for_timeout (&back_off_wait, event_start, 3*1000))
+					/*if (waiting_for_timeout (&back_off_wait, event_start, 3*1000))*/
+					/* We do not queue a wait here... this will only reduce framerates */
+					if (time_since (event_start) < 3*1000)
 						continue;
 				}
 				C_PTP_MSG (ret, "get_viewfinder_image failed");
@@ -3691,7 +3699,7 @@ camera_nikon_capture (Camera *camera, CameraCaptureType type, CameraFilePath *pa
 		if (params->inliveview) af = 0;
 	}
 
-	if (NIKON_1(params)) {
+	if (NIKON_1(params) && ptp_operation_issupported(params,PTP_OC_NIKON_StartLiveView)) { /* V1 does not have startliveview */
 		ret = ptp_nikon_start_liveview (params);
 		if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
 			C_PTP_REP_MSG(ret, _("Failed to enable liveview on a Nikon 1, but it is required for capture"));
@@ -5387,8 +5395,8 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 		params->controlmode = 1;
 	}
 
-	/* On Nikon 1 series, the liveview must be enabled before capture works */
-	if (NIKON_1(params)) {
+	/* On Nikon 1 series, the liveview must be enabled before capture works ... not on V1 which does not have it. */
+	if (NIKON_1(params) && ptp_operation_issupported(params,PTP_OC_NIKON_StartLiveView)) {
 		ret = ptp_nikon_start_liveview (params);
 		if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
 			C_PTP_REP_MSG(ret, _("Failed to enable liveview on a Nikon 1, but it is required for capture"));
