@@ -3321,7 +3321,7 @@ enable_liveview:
 	case PTP_VENDOR_SONY: {
 		uint32_t	preview_object = 0xffffc002; /* this is where the liveview image is accessed */
 		unsigned char	*ximage = NULL;
-		int		tries = 20;
+		int		tries = 50;
 
 #if 0
 		/* this times out, with 0.3 seconds wait ... bad */
@@ -3333,7 +3333,7 @@ enable_liveview:
 				break;
 			if (ret != PTP_RC_AccessDenied) /* we get those when we are too fast */
 				C_PTP (ret);
-			usleep(10*1000);
+			usleep(20*1000);
 		} while (tries--);
 
 		/* look for the JPEG SOI marker (0xFFD8) in data */
